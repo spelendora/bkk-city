@@ -1,0 +1,1160 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   Theme tokens. 6 options: default (paper light) + 5 night variants.
+   Select by setting data-theme on <html>.
+   ========================================================================== */
+
+:root,
+html[data-theme="paper"] {
+  --bg: #fafaf8;
+  --ink: #1a1a1a;
+  --stone: #8a8682;
+  --accent: #7c8471;
+  --rule: #d8d6d2;
+  --code-bg: #f0efed;
+  --scrim: rgba(12, 11, 10, 0.4);
+  --shadow-elev-2: 0 4px 24px rgba(26, 26, 26, 0.08);
+}
+
+/* Ink — тёплый, почти типографский чёрный. Сохраняет sage accent. */
+html[data-theme="ink"] {
+  --bg: #12110f;
+  --ink: #ebe8e0;
+  --stone: #8a8680;
+  --accent: #9aa286;
+  --rule: #2a2826;
+  --code-bg: #1c1b18;
+  --scrim: rgba(0, 0, 0, 0.65);
+  --shadow-elev-2: 0 4px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* Tailwind bridge: expose tokens as theme colors if someone uses utilities. */
+@theme {
+  --color-bg: var(--bg);
+  --color-ink: var(--ink);
+  --color-stone: var(--stone);
+  --color-sage: var(--accent);
+  --color-rule: var(--rule);
+  --color-code-bg: var(--code-bg);
+
+  --font-tight: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
+  --font-body: var(--font-inter), "Inter", system-ui, sans-serif;
+  --font-editorial: var(--font-fraunces), "Georgia", serif;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01", "ss02", "cv01";
+  background-color: var(--bg);
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--ink);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+*:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* ---- Prose styles for markdown ---- */
+.prose-wallpaper {
+  color: var(--ink);
+  font-family: var(--font-inter), "Inter", system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.8;
+  font-weight: 300;
+}
+
+.prose-wallpaper h1 {
+  font-family: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 200;
+  color: var(--ink);
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.prose-wallpaper h2 {
+  font-family: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
+  font-weight: 300;
+  color: var(--ink);
+  margin-top: 2.5rem;
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  border-top: 0.5px solid var(--rule);
+  padding-top: 1.5rem;
+}
+
+.prose-wallpaper h3 {
+  font-family: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 300;
+  color: var(--ink);
+  margin-top: 3.5rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.01em;
+  position: relative;
+}
+
+/* Auto-separator between sibling h3 blocks (Q&A pairs): a § glyph above each
+   h3 except the first in its container. Replaces the need for explicit `---`
+   in markdown source. */
+.prose-wallpaper h3::before {
+  content: "§";
+  position: absolute;
+  top: -1.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--stone);
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: 0.875rem;
+  font-style: italic;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* Hide the ornament above the first h3 in the article body (it sits right
+   under the parent h2, the heading itself is already a section break). */
+.prose-wallpaper h3:first-of-type::before {
+  display: none;
+}
+
+.prose-wallpaper h4 {
+  font-family: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--stone);
+  margin-top: 1.5rem;
+  margin-bottom: 0.375rem;
+  letter-spacing: 0.02em;
+}
+
+.prose-wallpaper p {
+  margin-bottom: 1.25rem;
+}
+
+.prose-wallpaper ul,
+.prose-wallpaper ol {
+  margin-bottom: 1.25rem;
+  padding-left: 1.25rem;
+}
+
+.prose-wallpaper ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+/* List items render as flowing block text with an em-dash "bullet" injected
+   via ::before. We avoid `display: flex` here: when the <li> is flex, every
+   inline child (<strong>, text runs, <a>) becomes a separate flex item and
+   neighboring nodes drift apart (empty children collapse weirdly on some
+   layout engines). Keeping <li> as a block with a hanging indent preserves
+   natural inline flow so "**форма TM47** — обязательное уведомление…" reads
+   as one continuous sentence. */
+.prose-wallpaper ul li {
+  display: list-item;
+  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+  text-indent: -1.5rem;
+}
+
+.prose-wallpaper ul li::before {
+  content: "—";
+  color: var(--stone);
+  margin-right: 0.5rem;
+  font-weight: 300;
+  display: inline-block;
+  width: 1rem;
+  text-indent: 0;
+}
+
+.prose-wallpaper ol {
+  list-style-type: decimal;
+  color: var(--stone);
+}
+
+.prose-wallpaper ol li {
+  margin-bottom: 0.5rem;
+  padding-left: 0.25rem;
+  color: var(--ink);
+}
+
+/* GFM task-list checkboxes (remark-gfm emits class="contains-task-list" on
+   the <ul> and class="task-list-item" on each <li> with an <input> child).
+   Override the generic <ul> em-dash bullet and list-item indentation so the
+   checkbox aligns flush with the left column and sits on the text baseline. */
+.prose-wallpaper ul.contains-task-list {
+  padding-left: 0;
+}
+
+.prose-wallpaper ul.contains-task-list li.task-list-item {
+  display: block;
+  list-style: none;
+  padding-left: 0;
+  text-indent: 0;
+  margin-bottom: 0.375rem;
+}
+
+.prose-wallpaper ul.contains-task-list li.task-list-item::before {
+  content: none;
+}
+
+.prose-wallpaper ul.contains-task-list li.task-list-item input[type="checkbox"] {
+  margin: 0 0.625rem 0 0;
+  vertical-align: -0.05em;
+  accent-color: var(--accent);
+  cursor: default;
+}
+
+.prose-wallpaper strong {
+  font-weight: 400;
+  color: var(--ink);
+}
+
+.prose-wallpaper em {
+  font-style: italic;
+  font-family: var(--font-fraunces), "Georgia", serif;
+  color: var(--ink);
+}
+
+.prose-wallpaper a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-thickness: 0.5px;
+  text-underline-offset: 3px;
+}
+
+.prose-wallpaper blockquote {
+  border-left: 1px solid var(--rule);
+  padding-left: 1.5rem;
+  margin-left: 0;
+  margin-right: 0;
+  margin-bottom: 1.25rem;
+  color: var(--stone);
+  font-family: var(--font-fraunces), "Georgia", serif;
+  font-style: italic;
+}
+
+/* ---- Callout variants: > [!TIP] / [!WARN] / [!NOTE] / [!IMPORTANT] ---- */
+.prose-wallpaper blockquote.callout {
+  border-left-width: 2px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  font-style: normal;
+  font-family: var(--font-inter), "Inter", sans-serif;
+  color: var(--ink);
+  background: var(--code-bg);
+}
+
+.prose-wallpaper blockquote.callout::before {
+  content: attr(data-callout-label);
+  display: block;
+  font-family: var(--font-inter-tight), "Inter Tight", sans-serif;
+  font-size: 0.5625rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--stone);
+  margin-bottom: 0.5rem;
+}
+
+.prose-wallpaper blockquote.callout--tip {
+  border-left-color: var(--accent);
+}
+.prose-wallpaper blockquote.callout--tip::before {
+  color: var(--accent);
+}
+
+.prose-wallpaper blockquote.callout--warn,
+.prose-wallpaper blockquote.callout--important {
+  border-left-color: #c47a5a;
+}
+.prose-wallpaper blockquote.callout--warn::before,
+.prose-wallpaper blockquote.callout--important::before {
+  color: #c47a5a;
+}
+
+.prose-wallpaper blockquote.callout--note {
+  border-left-color: var(--stone);
+}
+
+/* Last paragraph inside a callout — kill the bottom margin so the box is tight */
+.prose-wallpaper blockquote.callout > *:last-child {
+  margin-bottom: 0;
+}
+
+.prose-wallpaper code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.8125em;
+  color: var(--stone);
+  background: transparent;
+  border-bottom: 0.5px solid var(--rule);
+}
+
+.prose-wallpaper pre {
+  background-color: var(--code-bg);
+  padding: 1.25rem;
+  overflow-x: auto;
+  margin-bottom: 1.25rem;
+  font-size: 0.8125rem;
+}
+
+.prose-wallpaper pre code {
+  background-color: transparent;
+  color: inherit;
+  border-bottom: none;
+}
+
+/* Scrollable wrapper so wide tables don't break layout on mobile */
+.prose-wallpaper .table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 1.5rem;
+}
+
+.prose-wallpaper table {
+  width: 100%;
+  /* auto layout lets the browser distribute column widths by content */
+  table-layout: auto;
+  border-collapse: collapse;
+  /* margin handled by .table-scroll wrapper when present; keep as fallback */
+  margin-bottom: 0;
+  font-size: 0.875rem;
+  /* Prevent table from shrinking below its natural width on scroll */
+  min-width: 0;
+}
+
+.prose-wallpaper thead {
+  border-top: 1px solid var(--ink);
+  border-bottom: 0.5px solid var(--rule);
+}
+
+.prose-wallpaper th {
+  padding: 0.625rem 0.75rem 0.625rem 0;
+  text-align: left;
+  font-weight: 400;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--stone);
+  /* Allow header text to wrap */
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.prose-wallpaper td {
+  padding: 0.625rem 0.75rem 0.625rem 0;
+  border-bottom: 0.5px solid var(--rule);
+  color: var(--ink);
+  font-weight: 300;
+  /* Allow cell text to wrap rather than expand the column */
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.prose-wallpaper hr {
+  border: none;
+  border-top: 0.5px solid var(--rule);
+  margin: 2.5rem 0;
+}
+
+/* When the markdown source has `---` immediately before an h3 (the old Q&A
+   pattern), the h3::before ornament already renders its own separator.
+   Hide the hr in that case so we don't double up. */
+.prose-wallpaper hr + h3 {
+  margin-top: 2rem;
+}
+.prose-wallpaper hr:has(+ h3) {
+  display: none;
+}
+
+/* ---- Collapsible sources table (Исходные обсуждения) ---- */
+.prose-wallpaper details.sources-list {
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+  border-top: 0.5px solid var(--rule);
+  padding-top: 1.5rem;
+}
+
+.prose-wallpaper details.sources-list > summary {
+  cursor: pointer;
+  font-family: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--stone);
+  list-style: none;
+  padding: 0.25rem 0;
+  transition: color 0.15s ease;
+}
+
+.prose-wallpaper details.sources-list > summary::-webkit-details-marker {
+  display: none;
+}
+
+.prose-wallpaper details.sources-list > summary::before {
+  content: "+";
+  display: inline-block;
+  width: 1rem;
+  color: var(--accent);
+  font-weight: 300;
+  font-size: 0.875rem;
+}
+
+.prose-wallpaper details.sources-list[open] > summary::before {
+  content: "−";
+}
+
+.prose-wallpaper details.sources-list > summary:hover {
+  color: var(--ink);
+}
+
+.prose-wallpaper details.sources-list > *:not(summary) {
+  margin-top: 1rem;
+}
+
+/* ---- Collapsible web-check and test-fold blocks ------------------------
+   `web-check` = auto-generated web-verification fold emitted by the pipeline.
+   `test-fold` = marker used by the markdown kitchen-sink fixture to exercise
+   rehype-raw rendering of <details>. Both share the exact same look-and-feel
+   so the fixture represents the real production style. -------------------- */
+.prose-wallpaper details.web-check,
+.prose-wallpaper details.test-fold {
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+  border-top: 0.5px solid var(--rule);
+  padding-top: 1.5rem;
+}
+
+.prose-wallpaper details.web-check > summary,
+.prose-wallpaper details.test-fold > summary {
+  cursor: pointer;
+  font-family: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--stone);
+  list-style: none;
+  padding: 0.25rem 0;
+  transition: color 0.15s ease;
+}
+
+.prose-wallpaper details.web-check > summary::-webkit-details-marker,
+.prose-wallpaper details.test-fold > summary::-webkit-details-marker {
+  display: none;
+}
+
+.prose-wallpaper details.web-check > summary::before,
+.prose-wallpaper details.test-fold > summary::before {
+  content: "+";
+  display: inline-block;
+  width: 1rem;
+  color: var(--accent);
+  font-weight: 300;
+  font-size: 0.875rem;
+}
+
+.prose-wallpaper details.web-check[open] > summary::before,
+.prose-wallpaper details.test-fold[open] > summary::before {
+  content: "−";
+}
+
+.prose-wallpaper details.web-check > summary:hover,
+.prose-wallpaper details.test-fold > summary:hover {
+  color: var(--ink);
+}
+
+.prose-wallpaper details.web-check > *:not(summary),
+.prose-wallpaper details.test-fold > *:not(summary) {
+  margin-top: 1rem;
+}
+
+/* ---- Persona tile hover ---- */
+.persona-tile > div {
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.persona-tile:hover > div {
+  background-color: var(--code-bg);
+}
+.persona-tile:focus-visible > div {
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+}
+/* Suppress default focus ring on the link itself since we handle it on the inner div */
+.persona-tile:focus-visible {
+  outline: none;
+}
+
+/* ---- Glossary tooltips (Radix) ---- */
+.gloss-term {
+  text-decoration: underline dotted 1px;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 3px;
+  cursor: help;
+  outline: none;
+  border-radius: 0;
+}
+
+.gloss-term:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.gloss-tooltip {
+  max-width: 280px;
+  padding: 0.625rem 0.875rem;
+  background: var(--bg);
+  color: var(--ink);
+  border: 0.5px solid var(--rule);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  font-family: var(--font-inter), "Inter", system-ui, sans-serif;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  font-weight: 300;
+  z-index: 100;
+  animation: gloss-in 0.14s ease-out;
+  user-select: none;
+}
+
+html[data-theme="ink"] .gloss-tooltip {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.gloss-tooltip__arrow {
+  fill: var(--bg);
+  stroke: var(--rule);
+  stroke-width: 0.5;
+}
+
+@keyframes gloss-in {
+  from { opacity: 0; transform: translateY(2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* State data attributes from Radix for richer transitions */
+.gloss-tooltip[data-state="closed"] {
+  animation: gloss-out 0.1s ease-in;
+}
+@keyframes gloss-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* ---- Theme toggle ---- */
+.theme-selector__trigger {
+  background: transparent;
+  border: none;
+  color: var(--stone);
+  font-size: 0.625rem;
+  font-weight: 300;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0;
+  font-family: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
+  transition: color 0.15s ease;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.theme-selector__trigger:hover {
+  color: var(--ink);
+}
+
+/* ---- Masthead nav active indicator ---- */
+.nav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+}
+
+.nav-link--active::before {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background-color: var(--ink);
+  flex-shrink: 0;
+  margin-bottom: 0.05em;
+}
+
+/* Drop-cap removed — disproportionate on Cyrillic letters (e.g. "Ш"). */
+
+/* ---- Search input: focus state via container border upgrade ---- */
+/* The input itself has outline: none; we style its parent container */
+input[type="text"]:focus-visible {
+  outline: none; /* handled by container */
+}
+
+/* FAQ article rows: ensure links have accessible focus ring */
+.faq-article-row a:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---- FAQ index: article row hover ---- */
+.faq-article-row {
+  transition: background-color 0.12s ease;
+}
+.faq-article-row:hover {
+  background-color: var(--code-bg);
+}
+
+/* ---- Top10: rank numeral ---- */
+.top10-rank {
+  font-family: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 200;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+  color: var(--rule);
+  line-height: 1;
+  padding-top: 0.1em;
+  transition: color 0.15s ease;
+}
+
+/* ---- Persona tile: tightened list items ---- */
+.persona-tile__article-arrow {
+  font-family: var(--font-fraunces), "Georgia", serif;
+  font-style: italic;
+  font-size: 0.6875rem;
+  color: var(--accent);
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+
+/* ---- Mobile touch targets ---- */
+@media (max-width: 640px) {
+  /* Ensure nav links have sufficient touch area */
+  .nav-link {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Masthead padding tightens on mobile */
+  .faq-article-row > a > div {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+}
+
+/* ---- Print stylesheet ---- */
+@media print {
+  /* Hide navigation, theme toggle, and interactive chrome */
+  header,
+  footer,
+  nav[aria-label="Хлебные крошки"],
+  .theme-selector__trigger {
+    display: none !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 12pt;
+  }
+
+  /* Render article body in serif at print-safe size */
+  .prose-wallpaper {
+    font-family: var(--font-fraunces), "Georgia", serif !important;
+    font-size: 12pt;
+    line-height: 1.6;
+    color: #000 !important;
+    max-width: 100% !important;
+  }
+
+  /* Article headline */
+  article h1 {
+    font-size: 22pt;
+    page-break-after: avoid;
+  }
+
+  /* Avoid breaking inside headings and figures */
+  h1, h2, h3, h4, h5, h6, figure, table {
+    page-break-inside: avoid;
+    page-break-after: avoid;
+  }
+
+  /* Show full URLs for links */
+  .prose-wallpaper a::after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: #555;
+  }
+
+  /* Drop-cap removed. */
+}
+
+/* ---- Modern features ---- */
+
+/* --- Article outer row: left-margin + body + side TOC --- */
+.article-outer-row {
+  display: flex;
+  gap: 3rem;
+  /* align-items: start is required so that position:sticky on the rail
+     works correctly — flex-start (the default "stretch") would force the
+     rail to match the article height and break sticky. */
+  align-items: start;
+}
+
+/* The left aside keeps its existing grid-like width */
+.article-outer-row > aside {
+  flex-shrink: 0;
+  width: clamp(60px, 8vw, 120px);
+}
+
+/* The article body fills up to 640px */
+.article-outer-row > article {
+  flex: 1 1 0;
+  max-width: 640px;
+}
+
+/* Side TOC rail — hidden below 1280px, shown as fixed-width column above.
+   Width is generous enough to host 2-3 line heading wraps. */
+.article-side-toc-rail {
+  display: none;
+  flex-shrink: 0;
+  width: 240px;
+  padding-left: 2.5rem;
+  box-sizing: border-box;
+}
+
+@media (min-width: 1280px) {
+  .article-side-toc-rail {
+    display: block;
+    /* Sticky so the TOC stays on screen while the reader scrolls the body.
+       align-self: start on the rail itself is a safety net in case the
+       parent ever loses align-items: start. */
+    position: sticky;
+    top: 5rem;
+    max-height: calc(100vh - 5rem);
+    overflow-y: auto;
+    align-self: start;
+  }
+}
+
+/* --- Anchor scroll-margin: prevent heading from hiding under fixed masthead --- */
+.prose-wallpaper h2,
+.prose-wallpaper h3 {
+  scroll-margin-top: 5rem;
+}
+
+/* --- Copy-heading button --- */
+.copy-heading-wrapper {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+}
+
+.copy-heading-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--stone);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.625rem;
+  font-weight: 400;
+  padding: 0 0.25em;
+  line-height: 1;
+  transition: opacity 0.12s ease, color 0.12s ease;
+  flex-shrink: 0;
+  /* Align visually with the heading text baseline */
+  position: relative;
+  top: -0.05em;
+}
+
+.copy-heading-wrapper:hover .copy-heading-btn,
+.copy-heading-wrapper:focus-within .copy-heading-btn {
+  opacity: 1;
+}
+
+.copy-heading-btn:hover {
+  color: var(--accent);
+}
+
+.copy-heading-btn:focus-visible {
+  opacity: 1;
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Hide copy button in print */
+@media print {
+  .copy-heading-btn {
+    display: none !important;
+  }
+}
+
+/* ---- Navigation power-ups (Agent B) ---- */
+
+/* Reading time stat display */
+.reading-time {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.6875rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* CategoryAnchorNav — hide scrollbar in webkit */
+nav[aria-label="Переход к категории"]::-webkit-scrollbar {
+  display: none;
+}
+
+/* Print: hide navigation power-up elements */
+@media print {
+  nav[aria-label="Навигация по статьям"],
+  nav[aria-label="Связанные статьи"],
+  nav[aria-label="Содержание статьи"],
+  nav[aria-label="Переход к категории"] {
+    display: none !important;
+  }
+}
+
+/* ---- Location tooltips (Agent Z) ---------------------------------------- */
+
+.location-term {
+  text-decoration: underline solid 1px;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 3px;
+  cursor: help;
+  outline: none;
+}
+
+.location-term::after {
+  content: " ↗";
+  font-size: 0.7em;
+  color: var(--stone);
+  opacity: 0.6;
+}
+
+.location-term:hover::after,
+.location-term:focus-visible::after {
+  opacity: 1;
+}
+
+.location-term:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.location-tooltip {
+  max-width: 320px;
+  padding: 0.75rem 1rem;
+  background: var(--bg);
+  color: var(--ink);
+  border: 0.5px solid var(--rule);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  font-family: var(--font-inter), "Inter", system-ui, sans-serif;
+  z-index: 100;
+  animation: gloss-in 0.14s ease-out;
+}
+
+html[data-theme="ink"] .location-tooltip {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.location-tooltip__type {
+  font-family: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
+  font-size: 0.625rem;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--stone);
+  margin-bottom: 0.375rem;
+}
+
+.location-tooltip__name {
+  font-family: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  margin-bottom: 0.625rem;
+  line-height: 1.3;
+}
+
+.location-tooltip__link {
+  display: inline-block;
+  font-family: var(--font-inter), "Inter", system-ui, sans-serif;
+  font-size: 0.75rem;
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-thickness: 0.5px;
+  text-underline-offset: 3px;
+}
+
+.location-tooltip__link:hover {
+  color: var(--ink);
+}
+
+/* Print: hide location link arrows */
+@media print {
+  .location-term::after {
+    display: none;
+  }
+}
+
+/* ---- "Места в статье" section (PlacesInArticle component) --------------- */
+
+.places-in-article {
+  margin-top: 3rem;
+  margin-bottom: 2rem;
+  border-top: 0.5px solid var(--rule);
+  padding-top: 1.5rem;
+}
+
+.places-in-article__heading {
+  font-family: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
+  font-size: 0.4375rem;
+  font-weight: 300;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--stone);
+  margin-bottom: 1rem;
+}
+
+.places-in-article__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.places-in-article__item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.625rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-top: 0.5px solid var(--rule);
+}
+
+.places-in-article__item:last-child {
+  border-bottom: 0.5px solid var(--rule);
+}
+
+.places-in-article__dash {
+  font-family: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
+  font-size: 0.625rem;
+  font-weight: 300;
+  color: var(--accent);
+  flex-shrink: 0;
+  line-height: 1.75;
+  user-select: none;
+}
+
+.places-in-article__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.places-in-article__name {
+  font-family: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  line-height: 1.35;
+}
+
+.places-in-article__meta {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.places-in-article__type {
+  font-family: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  color: var(--stone);
+}
+
+.places-in-article__sep {
+  font-size: 0.5rem;
+  color: var(--rule);
+  user-select: none;
+}
+
+.places-in-article__link {
+  font-family: var(--font-inter), "Inter", system-ui, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 300;
+  color: var(--accent);
+  text-decoration: underline solid 1px;
+  text-underline-offset: 2px;
+}
+
+.places-in-article__link:hover {
+  color: var(--ink);
+}
+
+@media print {
+  .places-in-article__link::after {
+    display: none;
+  }
+}
+
+/* ---- Side TOC links — full wrap, no clipping ------------------------------
+   Long headings must wrap across as many lines as needed. The outer rail
+   already scrolls vertically (max-height + overflow-y: auto) so height is
+   not a concern. Key rules: display: block (not -webkit-box, which mis-
+   interprets line-clamp in some builds), white-space: normal, no overflow
+   clipping at the link level.
+   --------------------------------------------------------------------------- */
+.side-toc-link {
+  display: block;
+  font-family: var(--font-inter-tight), "Inter Tight", sans-serif;
+  font-size: 0.625rem;
+  font-weight: 300;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  color: var(--stone);
+  text-decoration: none;
+  white-space: normal;
+  /* break-word only breaks at word boundaries unless a single word exceeds
+     the container (then falls back like anywhere). `anywhere` was too
+     aggressive and chopped "Что такое details/summary (raw HTML)?" mid-word. */
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
+  padding: 0.125rem 0 0.125rem 0;
+  margin-left: -1px;
+  border-left: 1px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.side-toc-link[data-level="3"] {
+  font-size: 0.5625rem;
+  letter-spacing: 0.04em;
+  padding-left: 0.625rem;
+}
+
+.side-toc-link:hover {
+  color: var(--ink);
+}
+
+.side-toc-link--active {
+  color: var(--ink);
+  border-left-color: var(--accent);
+}
+
+/* ---- Inline TOC (mobile + tablet) ---------------------------------------
+   A collapsed <details> rendered right under the TL;DR on narrow viewports.
+   At ≥1280px the sticky ArticleSideTOC rail takes over and this block is
+   hidden. Styling intentionally echoes the existing hairline rules + all-caps
+   label vocabulary used elsewhere on the article page. ---------------------- */
+.article-inline-toc {
+  margin: 1.5rem 0 2rem;
+  border-top: 0.5px solid var(--rule);
+  border-bottom: 0.5px solid var(--rule);
+  padding: 0.875rem 0;
+}
+.article-inline-toc > summary {
+  font-family: var(--font-inter-tight), "Inter Tight", sans-serif;
+  font-size: 0.5625rem;
+  font-weight: 300;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--stone);
+  cursor: pointer;
+  list-style: none;
+}
+.article-inline-toc > summary::-webkit-details-marker { display: none; }
+.article-inline-toc > summary::before {
+  content: "+ ";
+  color: var(--stone);
+}
+.article-inline-toc[open] > summary::before {
+  content: "− ";
+}
+.article-inline-toc ol {
+  list-style: none;
+  padding: 1rem 0 0 0;
+  margin: 0;
+}
+.article-inline-toc li {
+  padding: 0.25rem 0;
+}
+.article-inline-toc li[data-level="3"] {
+  padding-left: 1rem;
+}
+.article-inline-toc a {
+  font-family: var(--font-inter-tight), "Inter Tight", sans-serif;
+  font-size: 0.75rem;
+  color: var(--ink);
+  text-decoration: none;
+}
+.article-inline-toc a:hover { color: var(--accent); }
+
+@media (min-width: 1280px) {
+  .article-inline-toc { display: none; }
+}
+
+/* ---- FAQ audience filter — hide rows not matching selection ----
+   When [data-audience-filter="tourist"], hide every row whose
+   data-audience is "expat" (keep "tourist" and "both").
+   When [data-audience-filter="expat"], hide every "tourist" row.
+   "all" matches everything (no rules fire).
+   --------------------------------------------------------------- */
+[data-audience-filter="tourist"] .faq-article-row[data-audience="expat"] {
+  display: none;
+}
+
+[data-audience-filter="expat"] .faq-article-row[data-audience="tourist"] {
+  display: none;
+}
+
+.landing-eyebrow {
+  font-family: var(--font-inter-tight), "Inter Tight", sans-serif;
+  font-size: 0.5625rem;
+  font-weight: 300;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--stone);
+  margin: 0 0 1.125rem 0;
+  padding: 0;
+}
+
+.faq-category-section[data-expanded="false"] .faq-category-body {
+  display: none;
+}
+.faq-category-section[data-expanded="true"] .faq-category-toggle--closed,
+.faq-category-section[data-expanded="false"] .faq-category-toggle--open {
+  display: none;
+}
+
+/* Hide the ⌘K keyboard hint on touch-only devices where it's meaningless. */
+@media (hover: none) and (pointer: coarse) {
+  .landing-search-hint { display: none; }
+}
+
+/* Landing "Нужна шпаргалка" — whole paragraph is the clickable link.
+   Hover lifts the ink color slightly toward --accent for affordance. */
+.landing-cheatsheet-link { transition: color 120ms ease; }
+.landing-cheatsheet-link:hover { color: var(--accent); }
