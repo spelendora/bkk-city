@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Masthead from "@/components/Masthead";
@@ -5,6 +6,11 @@ import SiteFooter from "@/components/SiteFooter";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import CommandPalette from "@/components/CommandPaletteLoader";
 import KeyboardShortcuts from "@/components/KeyboardShortcuts";
+import JsonLd, {
+  buildGraph,
+  buildCollectionPageSchema,
+  buildBreadcrumbList,
+} from "@/components/JsonLd";
 import { getAllCategories, getCategoryById, getSiteData } from "@/lib/data";
 
 // ---------------------------------------------------------------------------
@@ -25,28 +31,35 @@ interface Props {
 // Metadata — Russian title + description for each hub.
 // ---------------------------------------------------------------------------
 
-export async function generateMetadata({ params }: Props) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { category } = await params;
   const cat = getCategoryById(category);
   if (!cat || cat.id.startsWith("_")) return {};
 
-  const title = `${cat.title_ru} — FAQ Bangkok`;
+  // Root template in app/layout.tsx appends "— FAQ Bangkok" automatically,
+  // so the category title here is the bare Russian category name.
+  const title = cat.title_ru;
   const description = cat.description_ru;
-  const url = `/faq/${category}`;
+  const canonical = `https://bkk.city/faq/${category}`;
+  const fullTitle = `${cat.title_ru} — FAQ Bangkok`;
 
   return {
     title,
     description,
+    alternates: {
+      canonical,
+    },
     openGraph: {
-      title,
+      title: fullTitle,
       description,
       type: "website",
-      url,
+      url: canonical,
       siteName: "FAQ Bangkok",
+      locale: "ru_RU",
     },
     twitter: {
       card: "summary",
-      title,
+      title: fullTitle,
       description,
     },
   };
@@ -68,8 +81,29 @@ export default async function CategoryPage({ params }: Props) {
 
   const site = getSiteData();
 
+  // JSON-LD — CollectionPage with all articles in the hub + breadcrumb.
+  const collectionSchema = buildCollectionPageSchema({
+    url: `/faq/${cat.id}`,
+    name: `${cat.title_ru} — FAQ Bangkok`,
+    description: cat.description_ru,
+    partType: "Article",
+    items: cat.articles.map((a) => ({
+      name: a.title,
+      url: `/faq/${a.category_id}/${a.slug}`,
+    })),
+  });
+
+  const breadcrumbSchema = buildBreadcrumbList([
+    { name: "Главная", url: "/" },
+    { name: "FAQ", url: "/faq" },
+    { name: cat.title_ru },
+  ]);
+
+  const graph = buildGraph([collectionSchema, breadcrumbSchema]);
+
   return (
     <>
+      <JsonLd data={graph} />
       <Masthead />
       <CommandPalette />
       <KeyboardShortcuts />

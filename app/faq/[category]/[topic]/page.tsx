@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import React from "react";
@@ -11,7 +12,13 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import CommandPalette from "@/components/CommandPaletteLoader";
 import KeyboardShortcuts from "@/components/KeyboardShortcuts";
 import { isTopArticle } from "@/lib/top10";
-import JsonLd, { parseFaqEntries } from "@/components/JsonLd";
+import JsonLd, {
+  parseFaqEntries,
+  buildGraph,
+  buildArticleSchema,
+  buildFAQPageSchema,
+  buildBreadcrumbList,
+} from "@/components/JsonLd";
 import PlacesInArticle from "@/components/PlacesInArticle";
 import { getAllArticles, getArticleBySlug } from "@/lib/data";
 import type { Article } from "@/lib/data";
@@ -145,7 +152,7 @@ function extractTldrBullets(markdown: string): string[] {
     .filter(Boolean);
 }
 
-export async function generateMetadata({ params }: Props) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { category, topic } = await params;
   const article = getArticleBySlug(topic);
   if (!article) return {};
@@ -155,26 +162,35 @@ export async function generateMetadata({ params }: Props) {
     article.title,
     article.category_title
   );
-  const url = `/faq/${category}/${topic}`;
+  const canonical = `https://bkk.city/faq/${category}/${topic}`;
   const isInternal = category.startsWith("_");
+
+  // Root template in app/layout.tsx appends "— FAQ Bangkok" to `title`. For
+  // OG/Twitter we pass the full, flattened title since those consumers don't
+  // apply the template.
+  const fullTitle = `${article.title} — FAQ Bangkok`;
 
   return {
     title: article.title,
     description,
     keywords: article.keywords,
     robots: isInternal ? { index: false, follow: false } : undefined,
+    alternates: {
+      canonical,
+    },
     openGraph: {
-      title: article.title,
+      title: fullTitle,
       description,
       type: "article",
       publishedTime: article.generated,
       modifiedTime: article.generated,
-      url,
+      url: canonical,
       siteName: "FAQ Bangkok",
+      locale: "ru_RU",
     },
     twitter: {
       card: "summary",
-      title: article.title,
+      title: fullTitle,
       description,
     },
   };
@@ -279,72 +295,61 @@ export default async function ArticlePage({ params }: Props) {
   const related = getRelatedArticles(article, 3);
   const readMore = buildReadMore(next, related);
 
-  // JSON-LD structured data (Agent X)
+  // ---------------------------------------------------------------
+  // JSON-LD structured data
+  //
+  // Strategy:
+  //   - Always emit Article + BreadcrumbList.
+  //   - Additionally emit FAQPage when the body contains a well-formed
+  //     "Вопросы и ответы" section with >= 2 parsed Q&A entries. Google
+  //     penalises mismatched/sparse FAQPage markup, so we fall back to
+  //     Article-only when parsing yields fewer than 2 entries.
+  //   - Everything is wrapped in a single @graph for clean @id resolution.
+  // ---------------------------------------------------------------
   const description = extractTldrDescription(
     article.body_markdown,
     article.title,
     article.category_title
   );
-  const canonicalUrl = `https://bkk-faq.example.com/faq/${category}/${topic}`;
+  const articleUrl = `/faq/${category}/${topic}`;
 
-  const articleSchema = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: article.title,
+  const articleSchema = buildArticleSchema({
+    title: article.title,
     description,
     datePublished: article.generated,
     dateModified: article.generated,
-    inLanguage: "ru-RU",
-    author: { "@type": "Organization", name: "@bkk_chat" },
-    url: canonicalUrl,
-  };
+    url: articleUrl,
+    keywords: article.keywords,
+  });
 
   const faqEntries = parseFaqEntries(article.body_markdown);
   const faqSchema =
-    faqEntries.length > 0
-      ? {
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          mainEntity: faqEntries.map((e) => ({
-            "@type": "Question",
-            name: e.question,
-            acceptedAnswer: { "@type": "Answer", text: e.answer },
-          })),
-        }
+    faqEntries.length >= 2
+      ? buildFAQPageSchema({
+          url: articleUrl,
+          title: article.title,
+          description,
+          entries: faqEntries,
+        })
       : null;
 
-  const breadcrumbSchema = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "Главная",
-        item: "https://bkk-faq.example.com/",
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: "FAQ",
-        item: "https://bkk-faq.example.com/faq",
-      },
-      {
-        "@type": "ListItem",
-        position: 3,
-        name: article.category_title,
-        item: `https://bkk-faq.example.com/faq#${article.category_id}`,
-      },
-      { "@type": "ListItem", position: 4, name: article.title, item: canonicalUrl },
-    ],
-  };
+  const breadcrumbSchema = buildBreadcrumbList([
+    { name: "Главная", url: "/" },
+    { name: "FAQ", url: "/faq" },
+    { name: article.category_title, url: `/faq/${article.category_id}` },
+    { name: article.title },
+  ]);
+
+  const jsonLdGraph = buildGraph([
+    articleSchema,
+    breadcrumbSchema,
+    ...(faqSchema ? [faqSchema] : []),
+  ]);
 
   return (
     <>
-      {/* JSON-LD structured data */}
-      <JsonLd
-        data={[articleSchema, breadcrumbSchema, ...(faqSchema ? [faqSchema] : [])]}
-      />
+      {/* JSON-LD structured data — single @graph document */}
+      <JsonLd data={jsonLdGraph} />
 
       {/* Reading progress bar — client component, fixed to top of viewport */}
       <ReadingProgress />

@@ -1,12 +1,39 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Masthead from "@/components/Masthead";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import CommandPalette from "@/components/CommandPaletteLoader";
 import KeyboardShortcuts from "@/components/KeyboardShortcuts";
 import SiteFooter from "@/components/SiteFooter";
-export const metadata = {
+import JsonLd, {
+  buildGraph,
+  buildItemListSchema,
+  buildBreadcrumbList,
+} from "@/components/JsonLd";
+
+const TOP_TITLE = "Top — самые частые вопросы о Бангкоке";
+const TOP_DESCRIPTION =
+  "Короткий чеклист: обмен валют, симкарта, трансфер из аэропорта, аренда жилья, продление визы, дорога до Паттайи. С прямыми ссылками на статьи.";
+
+export const metadata: Metadata = {
   title: "Top",
-  description: "Самые частые вопросы о Бангкоке",
+  description: TOP_DESCRIPTION,
+  alternates: {
+    canonical: "https://bkk.city/top",
+  },
+  openGraph: {
+    title: TOP_TITLE,
+    description: TOP_DESCRIPTION,
+    url: "https://bkk.city/top",
+    siteName: "FAQ Bangkok",
+    locale: "ru_RU",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: TOP_TITLE,
+    description: TOP_DESCRIPTION,
+  },
 };
 
 /**
@@ -16,27 +43,27 @@ export const metadata = {
  */
 const TOP_ITEMS: { question: string; href: string }[] = [
   {
-    question: "Где поменять деньги",
+    question: "Где поменять валюту в Бангкоке",
     href: "/faq/money_banking/money_exchange_cash",
   },
   {
-    question: "Где купить симкарту",
+    question: "Где купить сим-карту в Бангкоке",
     href: "/faq/connectivity/connectivity_sim_tourist",
   },
   {
-    question: "Трансфер из аэропорта",
+    question: "Как добраться из аэропорта в Бангкок",
     href: "/faq/transport_city/transport_airport_transfer",
   },
   {
-    question: "Как снять жильё на краткосрок",
+    question: "Как снять квартиру на месяц в Бангкоке",
     href: "/faq/housing/housing_short_term_rent",
   },
   {
-    question: "Где продлить туристическую визу или штамп в Бангкоке",
+    question: "Как продлить туристическую визу в Бангкоке",
     href: "/faq/visas_immigration/visa_tourist_extension_30",
   },
   {
-    question: "Как добраться до Паттайи",
+    question: "Как добраться из Бангкока до Паттайи",
     href: "/faq/travel_within_thailand/travel_pattaya",
   },
 ];
@@ -44,8 +71,22 @@ const TOP_ITEMS: { question: string; href: string }[] = [
 export default function TopPage() {
   const items = TOP_ITEMS;
 
+  // JSON-LD — ItemList of the 6 curated picks + breadcrumb.
+  const itemListSchema = buildItemListSchema(
+    items.map((it) => ({ name: it.question, url: it.href })),
+    TOP_TITLE
+  );
+
+  const breadcrumbSchema = buildBreadcrumbList([
+    { name: "Главная", url: "/" },
+    { name: "Top" },
+  ]);
+
+  const graph = buildGraph([itemListSchema, breadcrumbSchema]);
+
   return (
     <>
+      <JsonLd data={graph} />
       <Masthead />
       <CommandPalette />
       <KeyboardShortcuts />

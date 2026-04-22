@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Masthead from "@/components/Masthead";
@@ -5,6 +6,11 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import SiteFooter from "@/components/SiteFooter";
 import CommandPalette from "@/components/CommandPaletteLoader";
 import KeyboardShortcuts from "@/components/KeyboardShortcuts";
+import JsonLd, {
+  buildGraph,
+  buildCollectionPageSchema,
+  buildBreadcrumbList,
+} from "@/components/JsonLd";
 import {
   PERSONAS,
   getPersonaById,
@@ -19,13 +25,36 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
-export async function generateMetadata({ params }: Props) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const persona = getPersonaById(id);
   if (!persona) return {};
+
+  // Root template in app/layout.tsx appends "— FAQ Bangkok" to `title`.
+  const title = persona.title;
+  const description = persona.subtitle;
+  const canonical = `https://bkk.city/personas/${id}`;
+  const fullTitle = `${persona.title} — FAQ Bangkok`;
+
   return {
-    title: persona.title,
-    description: persona.subtitle,
+    title,
+    description,
+    alternates: {
+      canonical,
+    },
+    openGraph: {
+      title: fullTitle,
+      description,
+      url: canonical,
+      siteName: "FAQ Bangkok",
+      locale: "ru_RU",
+      type: "website",
+    },
+    twitter: {
+      card: "summary",
+      title: fullTitle,
+      description,
+    },
   };
 }
 
@@ -36,8 +65,28 @@ export default async function PersonaPage({ params }: Props) {
 
   const articles = getArticlesForPersona(persona);
 
+  // JSON-LD — CollectionPage + breadcrumb for the persona hub.
+  const collectionSchema = buildCollectionPageSchema({
+    url: `/personas/${id}`,
+    name: `${persona.title} — FAQ Bangkok`,
+    description: persona.subtitle,
+    partType: "Article",
+    items: articles.map((a) => ({
+      name: a.title,
+      url: `/faq/${a.category_id}/${a.slug}`,
+    })),
+  });
+
+  const breadcrumbSchema = buildBreadcrumbList([
+    { name: "Главная", url: "/" },
+    { name: "Персона" },
+  ]);
+
+  const graph = buildGraph([collectionSchema, breadcrumbSchema]);
+
   return (
     <>
+      <JsonLd data={graph} />
       <Masthead />
       <CommandPalette />
       <KeyboardShortcuts />

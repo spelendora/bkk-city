@@ -26,7 +26,7 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://bkk-faq.example.com"),
+  metadataBase: new URL("https://bkk.city"),
   title: {
     default: "FAQ Bangkok",
     template: "%s — FAQ Bangkok",

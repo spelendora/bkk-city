@@ -1,22 +1,71 @@
+import type { Metadata } from "next";
 import Masthead from "@/components/Masthead";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import CommandPalette from "@/components/CommandPaletteLoader";
 import KeyboardShortcuts from "@/components/KeyboardShortcuts";
 import FaqCategoryAccordion from "@/components/FaqCategoryAccordion";
 import SiteFooter from "@/components/SiteFooter";
+import JsonLd, {
+  buildGraph,
+  buildCollectionPageSchema,
+  buildBreadcrumbList,
+} from "@/components/JsonLd";
 import { getAllCategories, getSiteData } from "@/lib/data";
 
-export const metadata = {
-  title: "FAQ",
-  description: "Все статьи Bangkok FAQ по категориям",
+const FAQ_TITLE = "FAQ — все статьи по категориям";
+const FAQ_DESCRIPTION =
+  "Все статьи FAQ Bangkok по категориям: визы, жильё, транспорт, деньги, связь, еда, медицина. Находите ответ за пару кликов.";
+
+export const metadata: Metadata = {
+  title: FAQ_TITLE,
+  description: FAQ_DESCRIPTION,
+  alternates: {
+    canonical: "https://bkk.city/faq",
+  },
+  openGraph: {
+    title: FAQ_TITLE,
+    description: FAQ_DESCRIPTION,
+    url: "https://bkk.city/faq",
+    siteName: "FAQ Bangkok",
+    locale: "ru_RU",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: FAQ_TITLE,
+    description: FAQ_DESCRIPTION,
+  },
 };
 
 export default function FaqPage() {
   const categories = getAllCategories();
   const site = getSiteData();
 
+  // JSON-LD — CollectionPage listing the category hubs, plus breadcrumb.
+  // Each category becomes a WebPage part (categories aren't "Article" —
+  // they're hub pages that group articles).
+  const collectionSchema = buildCollectionPageSchema({
+    url: "/faq",
+    name: FAQ_TITLE,
+    description: FAQ_DESCRIPTION,
+    partType: "WebPage",
+    items: categories.map((cat) => ({
+      name: cat.title_ru,
+      url: `/faq/${cat.id}`,
+      description: cat.description_ru,
+    })),
+  });
+
+  const breadcrumbSchema = buildBreadcrumbList([
+    { name: "Главная", url: "/" },
+    { name: "FAQ" },
+  ]);
+
+  const graph = buildGraph([collectionSchema, breadcrumbSchema]);
+
   return (
     <>
+      <JsonLd data={graph} />
       <Masthead />
       <CommandPalette />
       <KeyboardShortcuts />

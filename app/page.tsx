@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Masthead from "@/components/Masthead";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -6,6 +7,41 @@ import LandingSearch from "@/components/LandingSearch";
 import CommandPalette from "@/components/CommandPaletteLoader";
 import KeyboardShortcuts from "@/components/KeyboardShortcuts";
 import SiteFooter from "@/components/SiteFooter";
+import JsonLd, {
+  buildGraph,
+  buildWebSiteSchema,
+  buildPublisherSchema,
+  buildBreadcrumbList,
+} from "@/components/JsonLd";
+
+// Landing uses a fully-qualified title (no "— FAQ Bangkok" suffix, since the
+// root template would otherwise double-append the brand). `title.absolute`
+// bypasses the template defined in app/layout.tsx.
+export const metadata: Metadata = {
+  title: {
+    absolute: "FAQ Bangkok — Ответы на вопросы о Бангкоке",
+  },
+  description:
+    "Ответы на главные вопросы о Бангкоке: визы, жильё, транспорт, деньги, еда. Проверенные подборки из @bkk_chat — коротко и по делу.",
+  alternates: {
+    canonical: "https://bkk.city/",
+  },
+  openGraph: {
+    title: "FAQ Bangkok — Ответы на вопросы о Бангкоке",
+    description:
+      "Ответы на главные вопросы о Бангкоке: визы, жильё, транспорт, деньги, еда. Проверенные подборки из @bkk_chat — коротко и по делу.",
+    url: "https://bkk.city/",
+    siteName: "FAQ Bangkok",
+    locale: "ru_RU",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "FAQ Bangkok — Ответы на вопросы о Бангкоке",
+    description:
+      "Ответы на главные вопросы о Бангкоке: визы, жильё, транспорт, деньги, еда. Проверенные подборки из @bkk_chat — коротко и по делу.",
+  },
+};
 
 /**
  * Landing page.
@@ -17,8 +53,17 @@ import SiteFooter from "@/components/SiteFooter";
  *   3. Нужна шпаргалка  — one-line link to /top10 (no inline list)
  */
 export default function LandingPage() {
+  // JSON-LD — WebSite (with SearchAction) + Publisher + BreadcrumbList,
+  // wrapped in a single @graph so @id cross-references resolve cleanly.
+  const graph = buildGraph([
+    buildWebSiteSchema(),
+    buildPublisherSchema(),
+    buildBreadcrumbList([{ name: "Главная" }]),
+  ]);
+
   return (
     <>
+      <JsonLd data={graph} />
       <Masthead />
       <CommandPalette />
       <KeyboardShortcuts />
